@@ -124,7 +124,7 @@
             </sizepolicy>
            </property>
            <property name="text">
-            <string>Skeleton</string>
+            <string>Saliency</string>
            </property>
           </widget>
          </item>
@@ -161,7 +161,7 @@
      <x>0</x>
      <y>0</y>
      <width>408</width>
-     <height>23</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuCV_Project2_92135008">

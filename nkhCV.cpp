@@ -12,6 +12,7 @@
 #include <time.h>
 #include <limits.h>
 #include <cstring>
+#include <QtDebug>
 
 using namespace cv;
 nkhCV::nkhCV(QMainWindow *parent)
@@ -29,6 +30,7 @@ void nkhCV::nkhCIELAB(QString fileName)
         return;
     toCIELAB(img, cielab);
     //nkhImshow_Write(img,cielab,"Color:",fileName,"CIELAB");
+
 }
 
 void nkhCV::toCIELAB(cv::Mat &src, cv::Mat &dst){
@@ -745,13 +747,13 @@ void nkhCV::nkhSIFTMatch(QString fileName1, QString fileName2, int params[])
     nkhImproc(img1, img1, NORM_CMD);
     nkhImproc(img2, img2, NORM_CMD);
 
-    SiftFeatureDetector siftDetector;
-    SIFT mysift(0, 3, 0.04, 10, 1);
+    //SiftFeatureDetector siftDetector;
+    //SIFT mysift(0, 3, 0.04, 10, 1);
     std::vector<cv::KeyPoint> siftKeypointsSrc, siftKeypointsCmp;
 
     Mat descriptorsSrc, descriptorsCmp;
-    mysift(img1, Mat(), siftKeypointsSrc, descriptorsSrc);
-    mysift(img2, Mat(), siftKeypointsCmp, descriptorsCmp);
+    //mysift(img1, Mat(), siftKeypointsSrc, descriptorsSrc);
+   //mysift(img2, Mat(), siftKeypointsCmp, descriptorsCmp);
 
     //siftDetector.detect(img1, siftKeypointsSrc);
     drawKeypoints(img1, siftKeypointsSrc, dst1);
@@ -1098,4 +1100,89 @@ void nkhCV::thinningGuoHall(cv::Mat& im)
     while (cv::countNonZero(diff) > 0);
 
     im *= 255;
+}
+
+bool nkhCV::computeSaliencyImpl( cv::Mat image, cv::Mat saliencyMap )
+{
+  Mat grayTemp, grayDown;
+  std::vector<Mat> mv;
+  Size resizedImageSize( 64, 64 );
+
+  Mat realImage( resizedImageSize, CV_64F );
+  Mat imaginaryImage( resizedImageSize, CV_64F );
+  imaginaryImage.setTo( 0 );
+  Mat combinedImage( resizedImageSize, CV_64FC2 );
+  Mat imageDFT;
+  Mat logAmplitude;
+  Mat angle( resizedImageSize, CV_64F );
+  Mat magnitude( resizedImageSize, CV_64F );
+  Mat logAmplitude_blur, imageGR;
+
+  if( image.channels() == 3 )
+  {
+    cvtColor( image, imageGR, COLOR_BGR2GRAY );
+    resize( imageGR, grayDown, resizedImageSize, 0, 0, INTER_LINEAR );
+  }
+  else
+  {
+    resize( image, grayDown, resizedImageSize, 0, 0, INTER_LINEAR );
+  }
+
+  grayDown.convertTo( realImage, CV_64F );
+
+  mv.push_back( realImage );
+  mv.push_back( imaginaryImage );
+  merge( mv, combinedImage );
+  dft( combinedImage, imageDFT );
+  split( imageDFT, mv );
+
+  //-- Get magnitude and phase of frequency spectrum --//
+  cartToPolar( mv.at( 0 ), mv.at( 1 ), magnitude, angle, false );
+  log( magnitude, logAmplitude );
+  //-- Blur log amplitude with averaging filter --//
+  blur( logAmplitude, logAmplitude_blur, Size( 3, 3 ), Point( -1, -1 ), BORDER_DEFAULT );
+
+  exp( logAmplitude - logAmplitude_blur, magnitude );
+  //-- Back to cartesian frequency domain --//
+  polarToCart( magnitude, angle, mv.at( 0 ), mv.at( 1 ), false );
+  merge( mv, imageDFT );
+  dft( imageDFT, combinedImage, DFT_INVERSE );
+  split( combinedImage, mv );
+
+  cartToPolar( mv.at( 0 ), mv.at( 1 ), magnitude, angle, false );
+  GaussianBlur( magnitude, magnitude, Size( 5, 5 ), 8, 0, BORDER_DEFAULT );
+  magnitude = magnitude.mul( magnitude );
+
+  double minVal, maxVal;
+  minMaxLoc( magnitude, &minVal, &maxVal );
+
+  magnitude = magnitude / maxVal;
+  magnitude.convertTo( magnitude, CV_32F );
+
+  resize( magnitude, saliencyMap, image.size(), 0, 0, INTER_LINEAR );
+
+
+  // visualize saliency map
+  //imshow( "Saliency Map Interna", saliencyMap );
+
+
+  return true;
+
+}
+void nkhCV::nkhSaliency(QString fileName){
+    Mat img;
+    if(!nkhImread(img,fileName))
+        return;
+
+    Mat saliencyMap(img.size(),CV_32F);
+    int start_s=clock();
+    qDebug() << computeSaliencyImpl(img,saliencyMap);
+    int stop_s=clock();
+    qDebug()  << "time: " << (stop_s-start_s)/double(CLOCKS_PER_SEC)*1000 << endl;
+    qDebug()  << saliencyMap.channels();
+    Mat dst;
+    //saliencyMap.convertTo(dst,CV_8U);
+    //threshold( saliencyMap, dst, 1 , 255, CV_THRESH_BINARY);
+    nkhImshow_Write(img, saliencyMap, "Saliency", "test.jpg", "Saliencyy3");
+
 }

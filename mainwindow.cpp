@@ -40,5 +40,6 @@ void MainWindow::on_pushButton_2_clicked()
 {
     bool invert = (ui->checkBox->isChecked())? true : false ;
     QString fileName1 = ui->lineEdit_SIFTsrc->text() ;
-    cvObj->nkhSkel(fileName1, invert);
+    //cvObj->nkhSkel(fileName1, invert);
+    cvObj->nkhSaliency(fileName1);
 }

@@ -5,9 +5,9 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/features2d/features2d.hpp>
-#include <opencv2/nonfree/features2d.hpp>
+//#include <opencv2/nonfree/features2d.hpp>
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/nonfree/nonfree.hpp>
+//#include <opencv2/nonfree/nonfree.hpp>
 #include <opencv/cv.h>
 #include <QString>
 #include <QMainWindow>
@@ -35,6 +35,7 @@ public:
     void nkhFourier(QString fileName);
     void nkhRectEll(QString fileName);
     void nkhSkel(QString fileName,bool invert);
+    void nkhSaliency(QString fileName);
 
     //Final Thesis
     void nkhCIELAB(QString fileName);
@@ -72,6 +73,7 @@ private:
     //final thesis
     void toCIELAB(cv::Mat &src, cv::Mat &dst);
     void colorMask(cv::Mat &src, cv::Mat &dst, std::string color, bool video);
+    bool computeSaliencyImpl(cv::Mat inImage, cv::Mat saliencyMap );
 
 };
 
