@@ -18,7 +18,6 @@ using namespace cv;
 nkhCV::nkhCV(QMainWindow *parent)
 {
     ui = parent ;
-
 }
 
 /*******************Final Thesis*******************/
@@ -120,28 +119,30 @@ void nkhCV::colorMask(Mat &src, Mat &dst, std::string color, bool video)
 
         if(src.empty())
             break;
-
+        //qDebug() << "size:\n" << src.size().width << " , " << src.size().height;
         if(video)
             resize(src,src, cvSize(src.size().width/2,src.size().height/2));
+
         cvtColor(src, imgHSV, COLOR_BGR2HSV);
         inRange(imgHSV, Scalar(iLowH, iLowS, iLowV), Scalar(iHighH, iHighS, iHighV), dst); //Threshold the image
         //        inRange(src, Scalar(iLowB, iLowG, iLowR), Scalar(iHighB, iHighG, iHighR), dst2); //Threshold the image
 
-
+/*
         //morphological opening (remove small objects from the foreground)
         erode(dst, dst, getStructuringElement(MORPH_ELLIPSE, Size(5,5)) );
         dilate( dst, dst, getStructuringElement(MORPH_ELLIPSE, Size(5,5)) );
         //morphological closing (fill small holes in the foreground)
         dilate( dst, dst, getStructuringElement(MORPH_ELLIPSE, Size(5,5)) );
         erode(dst, dst, getStructuringElement(MORPH_ELLIPSE, Size(5,5)) );
-
+*/
         //        Mat resized;
         if(video)
             resize(dst,dst, cvSize(dst.size().width/2.0,dst.size().height/2.0));
 
 
-
+/*
         medianBlur(dst,dst,5);
+        qDebug() << "size:\n" << dst.size().width << " , " << dst.size().height;
 
         //nkhImshow_Write(src, dst, "HSV", "HSV","green");
         //        nkhImshow_Write(src, dst2, "RGB", "RGB","green");
@@ -154,11 +155,11 @@ void nkhCV::colorMask(Mat &src, Mat &dst, std::string color, bool video)
         Mat edges = edgeDetect("","Edge Canny",EDGE_DETECT_CANNY,params, dst);
         findContours( edges, contours, order, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
         Mat showContours;// Mat::zeros( edges.size(), CV_8UC3 );
+
         if(video)
             resize(src,showContours,cvSize(src.size().width/2.0,src.size().height/2.0));
         else
             showContours = src.clone();
-
 
         RNG rng(12345);
 
@@ -197,8 +198,8 @@ void nkhCV::colorMask(Mat &src, Mat &dst, std::string color, bool video)
                 line( showContours, rect_points[j], rect_points[(j+1)%4], color, 1, 8 );
         }
         imshow("Contoures", showContours);
-
         nkhImshow_Write(dst, showContours, "Contoures", "cont","green");
+*/
 
         //        for( int i = 0; i< contours.size(); i++ )
         //        {
@@ -222,11 +223,11 @@ void nkhCV::colorMask(Mat &src, Mat &dst, std::string color, bool video)
 
         putText(src, fpsString, cvPoint(30,30),
                 FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
-        // imshow("Original",src);
-        imshow("Thresh",dst);
+         imshow("Original",src);
+        //imshow("Thresh",dst);
         // outVid<<showContours ;
 
-        if (waitKey(30) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
+        if (waitKey(10) == 27) //wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
         {
             break;
         }
